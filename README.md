@@ -14,3 +14,4 @@ steps
 7. start docker postgres and createdb using docker exec shell
 8. add queries by checking sqlc documentation and sqlc generate. Check for errors
 9. check sqlc output inside path given under sqlc yaml
+10. write functional test using custom made helper package utils
