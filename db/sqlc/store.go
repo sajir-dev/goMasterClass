@@ -4,24 +4,31 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
+	_ "github.com/golang/mock/mockgen/model"
 )
 
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, args TransferTxParams) (TransferTxResult, error)
+}
+
 // Store provides all functions to execute db queries and transactions
-type Store struct {
+type SQLstore struct {
 	*Queries
 	db *sql.DB
 }
 
 // NewStore ...
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLstore{
 		db:      db,
 		Queries: New(db),
 	}
 }
 
 // execTx executes a function within the database transactions
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLstore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -52,7 +59,7 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
-func (store *Store) TransferTx(ctx context.Context, args TransferTxParams) (TransferTxResult, error) {
+func (store *SQLstore) TransferTx(ctx context.Context, args TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {

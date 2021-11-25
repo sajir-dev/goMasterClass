@@ -4,6 +4,8 @@ SimpleBank project from YouTube
 // creating migration files
 migrate create -ext sql -dir db/migration -seq init_schema
 
+migrate create -ext sql -dir db/migration -seq add_users
+
 steps
 1. run postgres in docker
 2. create db model using dbdiagram, export as postgresql command
@@ -25,3 +27,8 @@ steps
 18. use gin for handling http requests
 19. use viper to load config
 
+
+
+### creating mocks
+mockgen -package <package-name> -destination <relative-path> <go-mod-path-to-directory-with-the-interface> <interface-name>
+mockgen -package mockdb -destination db/mock/store.go github.com/sajir-dev/goMasterClass/db/sqlc Store

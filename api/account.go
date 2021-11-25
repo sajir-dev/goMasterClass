@@ -5,12 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	db "github.com/sajir-dev/goMasterClass/db/sqlc"
 )
 
 type createAccountParams struct {
 	Owner    string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
+	Currency string `json:"currency" binding:"required,currency"`
 }
 
 func (s *Server) createAccount(c *gin.Context) {
@@ -27,6 +28,13 @@ func (s *Server) createAccount(c *gin.Context) {
 	}
 	account, err := s.store.CreateAccount(c, args)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "foreign_key_violation", "unique_violation":
+				c.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
+		}
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
