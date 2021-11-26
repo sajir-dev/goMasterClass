@@ -27,6 +27,9 @@ func NewServer(store db.Store) *Server {
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "Pong")
 	})
+
+	router.POST("/users", server.CreateUser)
+
 	router.POST("/accounts", server.createAccount)
 	router.GET("/accounts/:id", server.getAccount)
 	router.GET("/accounts", server.listAccount)
