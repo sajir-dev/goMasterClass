@@ -17,17 +17,25 @@ type CreateUserParams struct {
 	Email    string `json:"email" binding:"required,email"`
 }
 
+type CreateUserResponse struct {
+	Username         string `json:"username"`
+	Fullname         string `json:"full_name"`
+	Email            string `json:"email"`
+	CreatedAt        string `json:"created_at"`
+	PasswordChangeAt string `json:"password_changed_at"`
+}
+
 // CreateUser ...
 func (s *Server) CreateUser(c *gin.Context) {
 	var req CreateUserParams
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusOK, errorResponse(err))
+		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
-		c.JSON(http.StatusOK, errorResponse(err))
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -51,5 +59,13 @@ func (s *Server) CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	resp := CreateUserResponse{
+		Username:         res.Username,
+		Email:            res.Email,
+		Fullname:         res.FullName,
+		CreatedAt:        res.CreatedAt.String(),
+		PasswordChangeAt: res.PasswordChangedAt.String(),
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
