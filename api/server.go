@@ -7,39 +7,57 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	db "github.com/sajir-dev/goMasterClass/db/sqlc"
+	"github.com/sajir-dev/goMasterClass/token"
+	"github.com/sajir-dev/goMasterClass/utils"
 )
 
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	config     utils.Config
+	store      db.Store
+	tokenMaker token.Maker
+	router     *gin.Engine
 }
 
-func NewServer(store db.Store) *Server {
-	server := &Server{
-		store: store,
+func NewServer(store db.Store, config utils.Config) (*Server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.SymmetricKey)
+	if err != nil {
+		return nil, err
 	}
-	router := gin.Default()
+	server := &Server{
+		store:      store,
+		tokenMaker: tokenMaker,
+		config:     config,
+	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
+	server.setupRoutes()
+
+	return server, nil
+}
+
+func (server *Server) setupRoutes() {
+	router := gin.Default()
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "Pong")
 	})
 
 	router.POST("/users", server.CreateUser)
+	router.POST("/users/login", server.LoginUser)
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts", server.listAccount)
-	router.PUT("/accounts", server.updateAccount)
-	router.DELETE("/accounts/:id", server.deleteAccount)
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	router.POST("/transfers", server.createTransfer)
+	authRoutes.POST("/accounts", server.createAccount)
+	authRoutes.GET("/accounts/:id", server.getAccount)
+	authRoutes.GET("/accounts", server.listAccount)
+	authRoutes.PUT("/accounts", server.updateAccount)
+	authRoutes.DELETE("/accounts/:id", server.deleteAccount)
+
+	authRoutes.POST("/transfers", server.createTransfer)
 
 	server.router = router
-	return server
 }
 
 func (s *Server) Start(port string) error {
