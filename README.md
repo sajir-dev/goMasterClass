@@ -32,3 +32,12 @@ steps
 ### creating mocks
 mockgen -package <package-name> -destination <relative-path> <go-mod-path-to-directory-with-the-interface> <interface-name>
 mockgen -package mockdb -destination db/mock/store.go github.com/sajir-dev/goMasterClass/db/sqlc Store
+
+### creating docker image
+docker build -t simplebank:latest .
+
+### docker run in gin release mode
+docker run --name simplebank -p 8080:8080 -e GIN_MODE=release simplebank:latest
+
+### docker network create 
+docker run --name simplebank --network bank-network -p 8080:8080 -e DB_SOURCE="postgresql://root:secret@postgres14:5432/simple_bank?sslmode=disable" -e GIN_MODE=release simplebank:latest
