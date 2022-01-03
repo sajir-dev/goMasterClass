@@ -43,4 +43,5 @@ func TestExpiredToken(t *testing.T) {
 	payload, err := maker.VerifyToken(token)
 	assert.NotNil(t, err)
 	assert.Nil(t, payload)
+	// assert.Equal(t, ErrExpiredToken, err) check why
 }

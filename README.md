@@ -41,3 +41,9 @@ docker run --name simplebank -p 8080:8080 -e GIN_MODE=release simplebank:latest
 
 ### docker network create 
 docker run --name simplebank --network bank-network -p 8080:8080 -e DB_SOURCE="postgresql://root:secret@postgres14:5432/simple_bank?sslmode=disable" -e GIN_MODE=release simplebank:latest
+
+### creating random hex key using openssl
+=> openssl rand -hex 64
+
+for taking the first 32 bit
+=> openssl rand -hex 64 | head -c 32
